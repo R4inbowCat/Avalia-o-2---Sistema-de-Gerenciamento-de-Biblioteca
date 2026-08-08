@@ -3,17 +3,17 @@ d.limpa()
 d.cabecalho()
 
 def cadastrar():
-
+    pass
 def emprestimo():
-
+    pass
 def devolucao():
-
+    pass
 def listar():
-
+    pass
 def ordenar():
-
+    pass
 def buscar():
-
+    pass
 
 while True:
     print("========================================")
