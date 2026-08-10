@@ -1,8 +1,30 @@
+import csv # Importa a biblioteca do csv para salvar os livros cadastrados na memória.
 import definicoes as d # Importa as funções de limpar a tela e o cabeçalho que estão em outro arquivo.
 d.limpa()
 d.cabecalho()
 
-lista_de_livros = [] # Essa lista guardará todos os livros cadastrados no sistema.
+arquivo_csv = "livros.csv" # Define o nome do arquivo CSV que será usado para salvar os livros cadastrados.
+cabecalho_planilha = ["titulo", "autor", "publicacao", "isbn", "status"] # Define as categorias que serão usadas no cabeçalho do arquivo CSV.
+
+def ler_arquivo_csv():
+    lista = [] # Cria uma lista vazia para armazenar os livros cadastrados.
+    try: # Tenta abrir o arquivo CSV apenas para leitura (mode="r").
+        with open(arquivo_csv, mode="r", encoding="utf-8") as arquivo:
+            leitor = csv.DictReader(arquivo, delimiter=";") # Transforma as linhas do arquivo CSV em dicionários do Python.
+            for linha in leitor:
+                lista.append(dict(linha)) # Pega cada livro lido e guarda na lista da memória.
+    except FileNotFoundError:
+        pass  # Se o arquivo não tiver sido criado ainda, apenas inicia a lista vazia.
+    return lista
+
+def atualizar_arquivo_csv(lista):
+    # Abre o arquivo no modo de escrita (mode="w"), que apaga o antigo e prepara para reescrever.
+    with open(arquivo_csv, mode="w", encoding="utf-8", newline="") as arquivo:
+        escritor = csv.DictWriter(arquivo, fieldnames=cabecalho_planilha, delimiter=";") # Cria o escritor que vai escrever os dicionários na planilha CSV.
+        # 1º passo: Escreve o cabeçalho lá no topo da planilha.
+        escritor.writeheader()
+        # 2º passo: Adiciona todos os livros da lista atualizada de uma vez só.
+        escritor.writerows(lista)
 
 def cadastrar(titulo, autor, publicacao, codigo_isbn):
     # Cria o dicionário do livro cadastrado com as informações fornecidas.
@@ -28,6 +50,9 @@ def input_seguro(mensagem):
     if resposta == "0": # Verifica se o usuário digitou 0 para voltar ao menu principal.
         raise Exception("CANCELADO") # Esse "cancelado" é apenas para indicar que o usuário cancelou a operação e não que um erro aconteceu.
     return resposta
+
+# A lista de livros é carregada quando o programa é iniciado.
+lista_de_livros = ler_arquivo_csv()
 
 while True: # Mantém o menu principal rodando continuamente até o usuário escolher a opção 7 para sair.
     print("=" * 40)
@@ -105,6 +130,8 @@ while True: # Mantém o menu principal rodando continuamente até o usuário esc
             # Se o usuário não digitar 0 para voltar ao menu principal, o cadastro é finalizado.
             novo_livro = cadastrar(titulo, autor, publicacao, codigo_isbn) # Chama a função cadastrar() para criar o dicionário do livro com as informações fornecidas no input.
             lista_de_livros.append(novo_livro) # Adiciona o dicionário do livro na lista de livros cadastrados.
+            atualizar_arquivo_csv(lista_de_livros) # Salva a lista de livros cadastrados no arquivo CSV.
+            d.limpa()
             print("\nLivro cadastrado com sucesso!")
 
         # Se ele digitar 0, o programa vai pular para esse bloco de exceção e mostrar a mensagem de cancelamento.
