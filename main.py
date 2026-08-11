@@ -4,7 +4,8 @@ d.limpa()
 d.cabecalho()
 
 arquivo_csv = "livros.csv" # Define o nome do arquivo CSV que será usado para salvar os livros cadastrados.
-cabecalho_planilha = ["titulo", "autor", "publicacao", "isbn", "status"] # Define as categorias que serão usadas no cabeçalho do arquivo CSV.
+cabecalho_planilha = ["titulo", "autor", "publicacao", "isbn", "status"]
+# Define as categorias que serão usadas no cabeçalho do arquivo CSV.
 
 def ler_arquivo_csv():
     lista = [] # Cria uma lista vazia para armazenar os livros cadastrados.
@@ -20,7 +21,9 @@ def ler_arquivo_csv():
 def atualizar_arquivo_csv(lista):
     # Abre o arquivo no modo de escrita (mode="w"), que apaga o antigo e prepara para reescrever.
     with open(arquivo_csv, mode="w", encoding="utf-8", newline="") as arquivo:
-        escritor = csv.DictWriter(arquivo, fieldnames=cabecalho_planilha, delimiter=";") # Cria o escritor que vai escrever os dicionários na planilha CSV.
+        escritor = csv.DictWriter(arquivo, fieldnames=cabecalho_planilha, delimiter=";")
+        # Cria o escritor que vai escrever os dicionários na planilha CSV.
+        
         # 1º passo: Escreve o cabeçalho lá no topo da planilha.
         escritor.writeheader()
         # 2º passo: Adiciona todos os livros da lista atualizada de uma vez só.
@@ -32,20 +35,25 @@ def cadastrar(lista_de_livros):
     print("\n(Digite '0' em qualquer pergunta para cancelar e voltar ao menu principal.)")
 
     try: # O programa vai tentar rodar este bloco inteiro.
+        # Parte do título:
         while True:
-            # Parte do título:
             titulo = input_seguro("\nDigite o título do livro: ")
             if titulo == "":
                 print("\nO título não pode ficar em branco. Tente novamente.")
                 continue
+            break # Se o usuário digitou algo válido, sai do loop e passa para a próxima pergunta.
 
-            # Parte do autor:
+        # Parte do autor:
+        while True:
             autor = input_seguro("\nDigite o autor: ")
-            if autor == "": # Verifica se o usuário não digitou nada no input, se for verdade, pede para digitar novamente.
+            if autor == "":
+            # Verifica se o usuário não digitou nada no input, se for verdade, pede para digitar novamente.
                 print("\nO autor não pode ficar em branco. Tente novamente.")
                 continue
+            break
 
-            # Parte do ano de publicação:
+        # Parte do ano de publicação:
+        while True:
             publicacao = input_seguro("\nDigite o ano de publicação: ")
             if publicacao == "":
                 print("\nO ano não pode ficar em branco. Tente novamente.\n") 
@@ -54,8 +62,10 @@ def cadastrar(lista_de_livros):
             if not publicacao.isdigit() or not 1000 <= int(publicacao) <= 2026:
                 print("\nO ano digitado é inválido (muito grande ou muito pequeno). Tente novamente.")
                 continue
+            break
 
-            # Parte do código ISBN:
+        # Parte do código ISBN:
+        while True:
             codigo_isbn = input_seguro("\nDigite o Código ISBN do livro: ")
             if codigo_isbn == "":
                 print("\nO Código ISBN não pode ficar em branco. Tente novamente.")
@@ -80,17 +90,17 @@ def cadastrar(lista_de_livros):
                 # Se já tiver um código igual, o programa pede para digitar outro código ISBN.
                 print("\nEste código ISBN já está cadastrado em outro livro na biblioteca. Tente novamente.")
                 continue
+            break
 
-            """Se o usuário não digitar 0 para voltar ao menu principal, o dicionário do livro 
-            cadastrado é criado com as informações fornecidas nos inputs."""
+        """Se o usuário não digitar 0 para voltar ao menu principal, o dicionário do livro 
+        cadastrado é criado com as informações fornecidas nos inputs."""
 
-            novo_livro = {"titulo": titulo.title(), "autor": autor.title(), "publicacao": publicacao, "isbn": codigo_isbn_limpo, "status": "disponível"}
-            # O .title() deixa as primeiras letras maiúsculas, para padronizar a escrita e deixar mais organizado.
-            lista_de_livros.append(novo_livro) # Adiciona o dicionário do livro na lista de livros cadastrados.
-            atualizar_arquivo_csv(lista_de_livros) # Salva a lista de livros cadastrados no arquivo CSV.
-            d.limpa()
-            print(f"\nLivro {novo_livro['titulo']} cadastrado com sucesso!")
-            break # Sai do loop de cadastro e volta para o menu principal.
+        # O .title() deixa as primeiras letras maiúsculas, para padronizar a escrita e deixar mais organizado.
+        novo_livro = {"titulo": titulo.title(), "autor": autor.title(), "publicacao": publicacao, "isbn": codigo_isbn_limpo, "status": "disponível"}
+        lista_de_livros.append(novo_livro) # Adiciona o dicionário do livro na lista de livros cadastrados.
+        atualizar_arquivo_csv(lista_de_livros) # Salva a lista de livros cadastrados no arquivo CSV.
+        d.limpa()
+        print(f"\n● Livro {novo_livro['titulo']} cadastrado com sucesso!")
 
     except Exception: 
         d.limpa()
@@ -114,14 +124,15 @@ def emprestimo(lista_de_livros):
             livro_encontrado = False
             sucesso_emprestimo = False
 
-            for livro in lista_de_livros: # Percorre toda a lista de livros cadastrados para encontrar o livro com o código ISBN digitado pelo usuário.
+            # Percorre toda a lista de livros cadastrados para encontrar o livro com o código ISBN digitado pelo usuário.
+            for livro in lista_de_livros:
                 if livro["isbn"] == codigo_isbn_limpo:
                     livro_encontrado = True
                     if livro["status"] == "disponível":
                         livro["status"] = "emprestado"
                         atualizar_arquivo_csv(lista_de_livros)
                         d.limpa()
-                        print(f"\nEmpréstimo do livro {livro['titulo']} registrado com sucesso!")
+                        print(f"\n● Empréstimo do livro {livro['titulo']} registrado com sucesso!")
                         sucesso_emprestimo = True
                         break # Acaba com o laço de repetição do for.
                     else:
@@ -167,7 +178,7 @@ def devolucao(lista_de_livros):
                         livro["status"] = "disponível"
                         atualizar_arquivo_csv(lista_de_livros)
                         d.limpa()
-                        print(f"\nDevolução do livro {livro['titulo']} registrada com sucesso!")
+                        print(f"\n● Devolução do livro {livro['titulo']} registrada com sucesso!")
                         sucesso_devolucao = True
                         break # Acaba com o laço de repetição do for.
                     else:
@@ -192,8 +203,50 @@ def ordenar():
     pass
 def buscar():
     pass
-def excluir_cadastro():
-    pass
+
+def excluir_cadastro(lista_de_livros):
+    d.limpa()
+    print("==== Exclusão de livro ====")
+    print("\n(Digite '0' em qualquer pergunta para cancelar e voltar ao menu principal.)")
+    
+    try:
+        while True:
+            codigo_isbn = input_seguro("\nDigite o Código ISBN do livro que deseja excluir: ")
+            if codigo_isbn == "":
+                print("\nO Código ISBN não pode ficar em branco. Tente novamente.")
+                continue
+        
+            codigo_isbn_limpo = codigo_isbn.replace(" ", "").replace("-", "")
+            livro_encontrado = False
+            sucesso_exclusao = False
+    
+            """Esse laço de repetição percorrerá toda a lista de livros para encontrar um que tenha o 
+            mesmo código que o usuário digitou, e verificará se ele está emprestado. Se estiver, não será 
+            possível excluí-lo. Se não estiver, exclui o livro e salva a lista atualizada no arquivo CSV.""" 
+            for livro in lista_de_livros:
+                if livro["isbn"] == codigo_isbn_limpo:
+                    livro_encontrado = True
+                    if livro["status"] == "emprestado":
+                        print("\nEste livro está emprestado no momento. Não é possível excluí-lo. Tente outro Código ISBN.")
+                        break # Encerra o "for" e pede para o usuário digitar o código ISBN novamente.
+                    else:
+                        lista_de_livros.remove(livro) # Remove o livro da lista de livros cadastrados.
+                        atualizar_arquivo_csv(lista_de_livros)
+                        d.limpa()
+                        print(f"\n● Exclusão do livro {livro['titulo']} registrada com sucesso!")
+                        sucesso_exclusao = True
+                        break # Acaba com o laço de repetição do for.
+    
+            if not livro_encontrado:
+                # Se o livro não for encontrado, mostra um aviso de erro e pede para digitar o código de novo.
+                print("\nO Código ISBN digitado é inválido ou não está cadastrado na biblioteca. Tente novamente.")
+        
+            if sucesso_exclusao == True:
+                break # Se a exclusão for bem-sucedida, sai do loop e volta para o menu principal.
+                    
+    except Exception: 
+        d.limpa()
+        print("\nExclusão cancelada. Voltando ao menu principal...")
 
 def input_seguro(mensagem):
     resposta = input(mensagem).strip() # Retira os espaços vazios do que o usuário digitou, com o .strip().
@@ -214,12 +267,13 @@ while True: # Mantém o menu principal rodando continuamente até o usuário esc
     print("● 4. Listar livros")
     print("● 5. Ordenar a listagem")
     print("● 6. Buscar livro")
-    print("● 7. Sair do programa")
+    print("● 7. Excluir cadastro")
+    print("● 8. Sair do programa")
     opcao = input("\nEscolha uma opção: ")
 
     if opcao == "1":
         """Se o usuário digitar 1, entrará no bloco de cadastro de livro, mas ele pode sair 
-        quando quiser digitando 0 (essa lógica é aplicada em todas as outras opções)."""
+        quando quiser, digitando 0 (essa lógica é aplicada em todas as outras opções)."""
         cadastrar(lista_de_livros)
 
     elif opcao == "2":
@@ -238,7 +292,10 @@ while True: # Mantém o menu principal rodando continuamente até o usuário esc
     elif opcao == "6":
         buscar(lista_de_livros)
 
-    elif opcao == "7":
+    elif opcao =="7":
+        excluir_cadastro(lista_de_livros)
+
+    elif opcao == "8":
         print("\nEncerrando o programa...")
         break
 
