@@ -1,7 +1,12 @@
 import csv # Importa a biblioteca do csv para salvar os livros cadastrados na memória.
 import definicoes as d # Importa as funções de limpar a tela e o cabeçalho que estão em outro arquivo.
-d.limpa()
-d.cabecalho()
+from datetime import datetime # Usado para pegar o ano atual e validar o ano de publicação na função de cadastro.
+
+# Classe de exceção usada apenas para sinalizar que o usuário cancelou uma operação
+# digitando "0". Criar uma classe específica evita que erros reais do programa
+# sejam confundidos com um cancelamento do usuário.
+class OperacaoCancelada(Exception):
+    pass
 
 arquivo_csv = "livros.csv" # Define o nome do arquivo CSV que será usado para salvar os livros cadastrados.
 cabecalho_planilha = ["titulo", "autor", "publicacao", "isbn", "status"]
@@ -10,7 +15,7 @@ cabecalho_planilha = ["titulo", "autor", "publicacao", "isbn", "status"]
 # FUNÇÕES DO PROGRAMA ---------------------------------------------------------------------------------------------------------
 
 def ler_arquivo_csv():
-    lista = [] # Cria uma lista vazia para armazenar os livros cadastrados.
+    lista = []
     try: # Tenta abrir o arquivo CSV apenas para leitura (mode="r").
         with open(arquivo_csv, mode="r", encoding="utf-8") as arquivo:
             leitor = csv.DictReader(arquivo) # Transforma as linhas do arquivo CSV em dicionários do Python.
@@ -36,8 +41,9 @@ def input_seguro(mensagem):
     # O .strip() retira os espaços vazios do que o usuário digitou.
     resposta = input(mensagem).strip()
     if resposta == "0":
-        # O "cancelado" é apenas para indicar que o usuário cancelou a operação e não que um erro aconteceu.
-        raise Exception("CANCELADO")
+        # Essa exceção pega apenas o cancelamento do usuário, qualquer outro erro não
+        # previsto vai aparecer normalmente no terminal, em vez de ficar "mascarado".
+        raise OperacaoCancelada()
     return resposta
 
 def criar_tabela(lista_para_exibir):
@@ -90,13 +96,14 @@ def cadastrar():
             break
 
         # Parte do ano de publicação:
+        ano_atual = datetime.now().year
         while True:
             publicacao = input_seguro("\nDigite o ano de publicação: ")
             if publicacao == "":
-                print("\nO ano não pode ficar em branco. Tente novamente.") 
+                print("\nO ano não pode ficar em branco. Tente novamente.")
                 continue
             # Inverte a lógica: verifica se a data digitada não é número ou se está fora do limite.
-            if not publicacao.isdigit() or not 1000 <= int(publicacao) <= 2026:
+            if not publicacao.isdigit() or not 1000 <= int(publicacao) <= ano_atual:
                 print("\nO ano digitado é inválido (muito grande ou muito pequeno). Tente novamente.")
                 continue
             break
@@ -114,8 +121,8 @@ def cadastrar():
                 continue
             break
 
-        # Se o usuário não digitar 0 para voltar ao menu principal, o dicionário do livro 
-        # cadastrado é criado com as informações fornecidas nos inputs.
+        # Se chegou até aqui, é porque o usuário preencheu todos os campos corretamente.
+        # Então o dicionário do livro é criado com as informações fornecidas.
 
         novo_livro = {"titulo": titulo, "autor": autor, "publicacao": publicacao, "isbn": codigo_isbn, "status": "disponivel"}
         lista_de_livros.append(novo_livro) # Adiciona o dicionário do livro na lista de livros cadastrados.
@@ -123,7 +130,7 @@ def cadastrar():
         d.limpa()
         print(f"\n● Livro {novo_livro['titulo']} cadastrado com sucesso!")
 
-    except Exception: 
+    except OperacaoCancelada:
         d.limpa()
         print("\nCadastro cancelado. Voltando ao menu principal...")
         # Se ele digitar 0, o programa vai pular para esse bloco de exceção e mostrar a mensagem de 
@@ -210,7 +217,7 @@ def gerenciar_livro(acao):
             if sucesso_operacao:
                 break
                 
-    except Exception: 
+    except OperacaoCancelada: 
         d.limpa()
         # O .split()[0] "recorta" a primeira palavra do título para avisar qual operação foi cancelada 
         # se o usuário digitar 0 para voltar ao menu.
@@ -257,7 +264,7 @@ def listar():
                 criar_tabela(lista_ordenada)
                 input_seguro("\nDigite '0' quando desejar voltar para o menu principal: ")
                 
-    except Exception: 
+    except OperacaoCancelada: 
         d.limpa()
         print("\nListagem cancelada. Voltando ao menu principal...")
 
@@ -319,7 +326,7 @@ def ordenar():
             else:
                 input_seguro("\nOpção inválida. Digite 'Enter' para tentar novamente: ")
 
-    except Exception: 
+    except OperacaoCancelada: 
         d.limpa()
         print("\nOrdenação cancelada. Voltando ao menu principal...")
         return None
@@ -334,17 +341,18 @@ def buscar():
             print("\n(Digite '0' em qualquer pergunta para cancelar e voltar ao menu principal.)")
 
             # O .strip() tira os espaços das bordas e o .lower() deixa tudo em minúsculo para facilitar a busca.
-            titulo_busca = input_seguro("\nDigite o título do livro que deseja buscar: ").strip().lower()
-            if titulo_busca == "":
-                input_seguro("\nO título não pode ficar em branco. Pressione 'Enter' para tentar novamente: ")
+            livro_busca = input_seguro("\nDigite o título ou o autor que deseja buscar: ").strip().lower()
+            if livro_busca == "":
+                input_seguro("\nA busca não pode ficar em branco. Pressione 'Enter' para tentar novamente: ")
                 continue
             # Cria uma lista temporária para guardar todos os livros que forem selecionados na busca.
             livros_encontrados = []
-            # Percorre toda a "biblioteca" comparando o texto digitado com os títulos cadastrados.
+            # Percorre toda a "biblioteca" comparando o texto digitado com os títulos e autores cadastrados.
             for livro in lista_de_livros:
                 titulo_minusculo = livro["titulo"].lower()
+                autor_minusculo = livro["autor"].lower()
                 # O in permite achar o livro mesmo se o usuário digitar só uma parte do nome.
-                if titulo_busca in titulo_minusculo:
+                if livro_busca in titulo_minusculo or livro_busca in autor_minusculo:
                     livros_encontrados.append(livro)
 
             # Se a lista temporária continuar vazia, significa que a busca não encontrou nada.
@@ -353,7 +361,7 @@ def buscar():
                 print("\nNenhum livro com o título digitado foi encontrado. Tente novamente.")
             else:
                 d.limpa()
-                print(f"===== Resultados da busca =====\n")
+                print("===== Resultados da busca =====\n")
                 print(f"● {len(livros_encontrados)} livro(s) encontrado(s)\n")
                 criar_tabela(livros_encontrados)
 
@@ -364,7 +372,7 @@ def buscar():
                 else:
                     print("\nValor digitado inválido. Tente novamente.")
 
-    except Exception: 
+    except OperacaoCancelada: 
         d.limpa()
         print("\nBusca cancelada. Voltando ao menu principal...")
 
@@ -410,5 +418,7 @@ def menu():
         else:
             print("\nOpção inválida, tente novamente.")
 
-#Chamo a função menu para iniciar
+# Prepara a tela inicial e chama o menu principal para iniciar o programa.
+d.limpa()
+d.cabecalho()
 menu()
