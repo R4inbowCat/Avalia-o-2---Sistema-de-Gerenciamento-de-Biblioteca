@@ -40,6 +40,30 @@ def input_seguro(mensagem):
         raise Exception("CANCELADO")
     return resposta
 
+def criar_tabela(lista_para_exibir):
+    # Exibe o cabeçalho da tabela com os títulos das colunas, e uma linha de separação.
+    print(f"{'TÍTULO':<25} | {'AUTOR(A)':<20} | ANO   | ISBN            | STATUS")
+    print("-" * 93)
+
+    # O for vai percorrer a lista de livros e exibir cada livro em uma linha da tabela.
+    for livro in lista_para_exibir:
+        titulo = livro['titulo']
+        autor = livro['autor']
+
+        # Se o título for maior que 25 letras, o sistema "corta" para a tabela não ficar 
+        # desorganizada, e adiciona "..." no final para indicar que o título foi cortado.
+        if len(titulo) > 25:
+            titulo = titulo[:22] + "..."
+
+        # Faz a mesma coisa com o autor se for maior que 20 letras.
+        if len(autor) > 20:
+            autor = autor[:17] + "..."
+
+        # Exibe os livros da biblioteca usando a mesma formatação do cabeçalho (os :<25 ou 
+        # :<20 servem para garantir que o espaço onde o texto está fique do tamanho certo).
+        print(f"{titulo:<25} | {autor:<20} | {livro['publicacao']:<5} | {livro['isbn']:<15} | {livro['status']}")
+    print("-" * 93)
+
 def cadastrar():
     # A lista de livros é carregada quando o programa é iniciado.
     lista_de_livros = ler_arquivo_csv()
@@ -105,102 +129,102 @@ def cadastrar():
         # Se ele digitar 0, o programa vai pular para esse bloco de exceção e mostrar a mensagem de 
         # cancelamento (essa mesma lógica é aplicada em quase todas as outras funções).
 
-def emprestimo():
+def gerenciar_livro(acao):
     lista_de_livros = ler_arquivo_csv()
     d.limpa()
-    print("===== Empréstimo de livro =====")
+    
+    # O programa ajusta os textos que serão exibidos, dependendo do que o usuário quer fazer.
+    if acao == "emprestar":
+        titulo_menu = "Empréstimo de livro"
+        texto_sucesso = "emprestado"
+    elif acao == "devolver":
+        titulo_menu = "Devolução de livro"
+        texto_sucesso = "devolvido"
+    elif acao == "excluir":
+        titulo_menu = "Exclusão de livro"
+        texto_sucesso = "excluído"
+
+    print(f"===== {titulo_menu} =====")
     print("\n(Digite '0' em qualquer pergunta para cancelar e voltar ao menu principal.)")
     
     try:
         while True:
-            titulo = input_seguro("\nDigite o título do livro que deseja emprestar: ")
+            # Usa a variável 'acao' para fazer 3 perguntas diferentes com o mesmo input.
+            titulo = input_seguro(f"\nDigite o título do livro que deseja {acao}: ")
             if titulo == "":
                 print("\nO título não pode ficar em branco. Tente novamente.")
                 continue
-            codigo_isbn = input_seguro("\nDigite o Código ISBN do livro que deseja emprestar: ")
-            if codigo_isbn == "":
-                print("\nO Código ISBN não pode ficar em branco. Tente novamente.")
-                continue
-
-            livro_encontrado = False
-            sucesso_emprestimo = False
-
-            # Percorre toda a lista de livros cadastrados para encontrar o livro com o código e título digitados pelo usuário.
-            for livro in lista_de_livros:
-                if livro["isbn"] == codigo_isbn and livro["titulo"] == titulo:
-                    livro_encontrado = True
-                    if livro["status"] == "disponivel":
-                        livro["status"] = "emprestado"
-                        atualizar_arquivo_csv(lista_de_livros)
-                        d.limpa()
-                        print(f"\n● Empréstimo do livro {livro['titulo']} registrado com sucesso!")
-                        sucesso_emprestimo = True
-                        break # Acaba com o laço de repetição do for.
-                    else:
-                        print("\nEste livro está indisponível no momento. Tente outro livro.")
-                        break # Também serve para acabar com o for, mas pede o código novamente.
-
-            if not livro_encontrado == True:
-                # Se o livro não for encontrado após o laço de repetição procurar pela lista inteira, 
-                # mostra a mensagem de erro e pede para o usuário digitar novamente.
-                print("\nO título ou o código digitado é inválido ou não está cadastrado na biblioteca. Tente novamente.")
-
-            if sucesso_emprestimo == True:
-                break # Se o empréstimo for bem-sucedido, sai do loop e volta para o menu principal.
             
-    except Exception: 
-        d.limpa()
-        print("\nEmpréstimo cancelado. Voltando ao menu principal...")
-
-def devolucao():
-    lista_de_livros = ler_arquivo_csv()
-    d.limpa()
-    print("===== Devolução de livro =====")
-    print("\n(Digite '0' em qualquer pergunta para cancelar e voltar ao menu principal.)")
-
-    # Essa função opera com a mesma lógica da função de empréstimo.
-    try:
-        while True:
-            titulo = input_seguro("\nDigite o título do livro que deseja devolver: ")
-            if titulo == "":
-                print("\nO título não pode ficar em branco. Tente novamente.")
-                continue
-            codigo_isbn = input_seguro("\nDigite o Código ISBN do livro que deseja devolver: ")
+            codigo_isbn = input_seguro(f"\nDigite o Código ISBN do livro que deseja {acao}: ")
             if codigo_isbn == "":
                 print("\nO Código ISBN não pode ficar em branco. Tente novamente.")
                 continue
-    
-            livro_encontrado = False
-            sucesso_devolucao = False
 
-            # Percorre a lista de livros para encontrar o que tem o mesmo código que o usuário digitou, 
-            # e verifica se ele realmente está emprestado. Se estiver, muda o status para 'disponível' 
-            # e salva a lista atualizada no arquivo CSV. 
+            livro_encontrado = False
+            sucesso_operacao = False
+
+            # O for percorre toda a biblioteca apenas uma vez, para selecionar os títulos e códigos.
             for livro in lista_de_livros:
                 if livro["isbn"] == codigo_isbn and livro["titulo"] == titulo:
                     livro_encontrado = True
-                    if livro["status"] == "emprestado":
-                        livro["status"] = "disponivel"
+                    
+                    # Cada ação que o usuário escolher terá validações específicas.
+                    if acao == "emprestar":
+                        if livro["status"] == "disponivel":
+                            livro["status"] = "emprestado"
+                            sucesso_operacao = True
+                        else:
+                            print("\nEste livro está indisponível no momento. Tente outro livro.")
+                            break # Encerra o for e pede para o usuário digitar novamente.
+                            
+                    elif acao == "devolver":
+                        if livro["status"] == "emprestado":
+                            livro["status"] = "disponivel"
+                            sucesso_operacao = True
+                        else:
+                            print("\nEste livro não está emprestado no momento. Tente outro livro.")
+                            break
+                            
+                    elif acao == "excluir":
+                        if livro["status"] == "emprestado":
+                            print("\nEste livro está emprestado no momento. Não é possível excluí-lo. Tente outro livro.")
+                            break
+                        else:
+                            lista_de_livros.remove(livro)
+                            sucesso_operacao = True
+
+                    # Utiliza a variável sucesso_operacao, que foi aplicada nas 3 ações diferentes, para salvar na 
+                    # lista de livros e exibir a mensagem de confirmação para o usuário.
+                    if sucesso_operacao:
                         atualizar_arquivo_csv(lista_de_livros)
                         d.limpa()
-                        print(f"\n● Devolução do livro {livro['titulo']} registrada com sucesso!")
-                        sucesso_devolucao = True
-                        break # Acaba com o laço de repetição do for.
-                    else:
-                        print("\nEste livro não está emprestado no momento. Tente outro livro.")
-                        break # Também serve para acabar com o for, mas pede o código novamente.
+                        print(f"\n● Livro {livro['titulo']} {texto_sucesso} com sucesso!")
+                        break
 
+            # Se o usuário digitar um livro inválido, será avisado e terá que digitar novamente.
             if not livro_encontrado:
-                # Se o livro não for encontrado após o laço de repetição procurar pela lista inteira, 
-                # exibe a mensagem de erro e pede para digitar o código novamente.
                 print("\nO título ou o código digitado é inválido ou não está cadastrado na biblioteca. Tente novamente.")
-    
-            if sucesso_devolucao == True:
-                break # Se a devolução for bem-sucedida, sai do loop e volta para o menu principal.
+
+            # Se a operação for finalizada sem nenhum problema, o laço de repetição (while True) é 
+            # quebrado e o usuário volta para o menu principal.
+            if sucesso_operacao:
+                break
                 
     except Exception: 
         d.limpa()
-        print("\nDevolução cancelada. Voltando ao menu principal...")
+        # O .split()[0] "recorta" a primeira palavra do título para avisar qual operação foi cancelada 
+        # se o usuário digitar 0 para voltar ao menu.
+        acao_cancelada = titulo_menu.split()[0]
+        print(f"\n{acao_cancelada} cancelada(o). Voltando ao menu principal...")
+
+def emprestimo():
+    gerenciar_livro("emprestar")
+
+def devolucao():
+    gerenciar_livro("devolver")
+
+def excluir_cadastro():
+    gerenciar_livro("excluir")
 
 def listar():
     lista_de_livros = ler_arquivo_csv()
@@ -216,44 +240,22 @@ def listar():
                 print("\nNenhum livro foi cadastrado ainda. Tente novamente mais tarde.")
                 input_seguro("\nDigite '0' para voltar ao menu principal: ")
 
+            # Se o usuário cancelar a ordenação digitando 0, a função listar() também é cancelada.
             elif lista_ordenada is None:
-                return # Se o usuário cancelar a ordenação, a função listar() também é cancelada.
+                return
 
+            # Se a lista ordenada estiver vazia, significa que não existem livros com o status selecionado.
             elif len(lista_ordenada) == 0:
                 print("\nNão há livros com o status escolhido na biblioteca. Tente novamente.")
                 input_seguro("\nDigite '0' para voltar ao menu principal: ")
 
-            else: 
-                # Exibe o cabeçalho da tabela com os títulos das colunas, e uma linha de separação.
-                print(f"{'TÍTULO':<25} | {'AUTOR(A)':<20} | ANO   | ISBN            | STATUS")
-                print("-" * 93)
-
-                # O for vai percorrer a lista de livros e exibir cada livro em uma linha da tabela.
-                for livro in lista_ordenada:
-                    titulo = livro['titulo']
-                    autor = livro['autor']
-
-                    # Se o título for maior que 25 letras, o sistema "corta" para a tabela não ficar 
-                    # desorganizada, e adiciona "..." no final para indicar que o título foi cortado.
-                    if len(titulo) > 25:
-                        titulo = titulo[:22] + "..."
-                        
-                    # Faz a mesma coisa com o autor se for maior que 20 letras.
-                    if len(autor) > 20:
-                        autor = autor[:17] + "..."
-                    
-                    # Exibe os livros da biblioteca usando a mesma formatação do cabeçalho (os :<25 ou 
-                    # :<20 servem para garantir que o espaço onde o texto está fique do tamanho certo).
-                    print(f"{titulo:<25} | {autor:<20} | {livro['publicacao']:<5} | {livro['isbn']:<15} | {livro['status']}")
-                print("-" * 93)
-
+            else: # Se não estiver, cria uma tabela formatada com os livros selecionados, usando a função criar_tabela()
+                criar_tabela(lista_ordenada)
                 input_seguro("\nDigite '0' quando desejar voltar para o menu principal: ")
                 
     except Exception: 
         d.limpa()
         print("\nListagem cancelada. Voltando ao menu principal...")
-
-# FUNÇÕES AUXILIARES PARA A DE ORDENAÇÃO ---------------------------------------------------------------------------------------------------------
 
 def listar_por_titulo(livro):
     return livro["titulo"]
@@ -339,25 +341,15 @@ def buscar():
                     livros_encontrados.append(livro)
 
             # Se a lista temporária continuar vazia, significa que a busca não encontrou nada.
-            # Se não, cria a tabela formatada com os resultados encontrados.
+            # Se não, cria a tabela formatada com os resultados encontrados, usando a função criar_tabela().
             if len(livros_encontrados) == 0:
                 print("\nNenhum livro com o título digitado foi encontrado. Tente novamente.")
             else:
                 d.limpa()
                 print(f"===== Resultados da busca =====\n")
                 print(f"● {len(livros_encontrados)} livro(s) encontrado(s)\n")
-                print(f"{'TÍTULO':<25} | {'AUTOR(A)':<20} | ANO   | ISBN            | STATUS")
-                print("-" * 93)
+                criar_tabela(livros_encontrados)
 
-                for livro in livros_encontrados:
-                    titulo = livro['titulo']
-                    autor = livro['autor']
-                    if len(titulo) > 25:
-                        titulo = titulo[:22] + "..."
-                    if len(autor) > 20:
-                        autor = autor[:17] + "..."
-                    print(f"{titulo:<25} | {autor:<20} | {livro['publicacao']:<5} | {livro['isbn']:<15} | {livro['status']}")
-                print("-" * 93)
             while True:
                 escolha = input_seguro("\nDigite '0' para voltar ao menu ou aperte 'Enter' para fazer uma nova busca: ")
                 if escolha == '':
@@ -368,54 +360,6 @@ def buscar():
     except Exception: 
         d.limpa()
         print("\nBusca cancelada. Voltando ao menu principal...")
-
-def excluir_cadastro():
-    lista_de_livros = ler_arquivo_csv()
-    d.limpa()
-    print("===== Exclusão de livro =====")
-    print("\n(Digite '0' em qualquer pergunta para cancelar e voltar ao menu principal.)")
-    
-    try:
-        while True:
-            titulo = input_seguro("\nDigite o título do livro que deseja excluir: ")
-            if titulo == "":
-                print("\nO título não pode ficar em branco. Tente novamente.")
-                continue
-            codigo_isbn = input_seguro("\nDigite o Código ISBN do livro que deseja excluir: ")
-            if codigo_isbn == "":
-                print("\nO Código ISBN não pode ficar em branco. Tente novamente.")
-                continue
-        
-            livro_encontrado = False
-            sucesso_exclusao = False
-    
-            # Esse laço de repetição percorrerá toda a lista de livros para encontrar um que tenha o 
-            # mesmo código que o usuário digitou, e verificará se ele está emprestado. Se estiver, não será 
-            # possível excluí-lo. Se não estiver, exclui o livro e salva a lista atualizada no arquivo CSV.
-            for livro in lista_de_livros:
-                if livro["isbn"] == codigo_isbn and livro["titulo"] == titulo:
-                    livro_encontrado = True
-                    if livro["status"] == "emprestado":
-                        print("\nEste livro está emprestado no momento. Não é possível excluí-lo. Tente outro livro.")
-                        break # Encerra o "for" e pede para o usuário digitar novamente.
-                    else:
-                        lista_de_livros.remove(livro) # Remove o livro da lista de livros cadastrados.
-                        atualizar_arquivo_csv(lista_de_livros)
-                        d.limpa()
-                        print(f"\n● Exclusão do livro {livro['titulo']} registrada com sucesso!")
-                        sucesso_exclusao = True
-                        break # Acaba com o laço de repetição do for.
-    
-            if not livro_encontrado:
-                # Se o livro não for encontrado, mostra um aviso de erro e pede para digitar o código de novo.
-                print("\nO título ou o código digitado é inválido ou não está cadastrado na biblioteca. Tente novamente.")
-        
-            if sucesso_exclusao == True:
-                break # Se a exclusão for bem-sucedida, sai do loop e volta para o menu principal.
-                    
-    except Exception: 
-        d.limpa()
-        print("\nExclusão cancelada. Voltando ao menu principal...")
 
 # MENU PRINCIPAL DO PROGRAMA ---------------------------------------------------------------------------------------------------------
 
