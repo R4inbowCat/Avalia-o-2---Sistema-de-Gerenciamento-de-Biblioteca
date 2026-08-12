@@ -93,7 +93,7 @@ def cadastrar():
         while True:
             publicacao = input_seguro("\nDigite o ano de publicação: ")
             if publicacao == "":
-                print("\nO ano não pode ficar em branco. Tente novamente.\n") 
+                print("\nO ano não pode ficar em branco. Tente novamente.") 
                 continue
             # Inverte a lógica: verifica se a data digitada não é número ou se está fora do limite.
             if not publicacao.isdigit() or not 1000 <= int(publicacao) <= 2026:
@@ -155,9 +155,9 @@ def gerenciar_livro(acao):
                 print("\nO título não pode ficar em branco. Tente novamente.")
                 continue
             
-            codigo_isbn = input_seguro(f"\nDigite o Código ISBN do livro que deseja {acao}: ")
-            if codigo_isbn == "":
-                print("\nO Código ISBN não pode ficar em branco. Tente novamente.")
+            autor = input_seguro(f"\nDigite o autor do livro que deseja {acao}: ")
+            if autor == "":
+                print("\nO autor não pode ficar em branco. Tente novamente.")
                 continue
 
             livro_encontrado = False
@@ -165,7 +165,7 @@ def gerenciar_livro(acao):
 
             # O for percorre toda a biblioteca apenas uma vez, para selecionar os títulos e códigos.
             for livro in lista_de_livros:
-                if livro["isbn"] == codigo_isbn and livro["titulo"] == titulo:
+                if livro["autor"] == autor and livro["titulo"] == titulo:
                     livro_encontrado = True
                     
                     # Cada ação que o usuário escolher terá validações específicas.
@@ -203,7 +203,7 @@ def gerenciar_livro(acao):
 
             # Se o usuário digitar um livro inválido, será avisado e terá que digitar novamente.
             if not livro_encontrado:
-                print("\nO título ou o código digitado é inválido ou não está cadastrado na biblioteca. Tente novamente.")
+                print("\nO título ou o autor digitado é inválido ou o livro não está cadastrado na biblioteca. Tente novamente.")
 
             # Se a operação for finalizada sem nenhum problema, o laço de repetição (while True) é 
             # quebrado e o usuário volta para o menu principal.
@@ -229,23 +229,27 @@ def excluir_cadastro():
 def listar():
     lista_de_livros = ler_arquivo_csv()
     # Chama a função ordenar e guarda a nova lista ordenada.
-    lista_ordenada = ordenar()
     d.limpa()
     print("===== Listagem de livros =====\n")
     
     try:
+        # Se a biblioteca não possuir nenhum livro cadastrado, a listagem não ocorre e retorna ao menu.
+        if len(lista_de_livros) == 0:
+            print("\nNenhum livro foi cadastrado ainda. Tente novamente mais tarde.")
+            input_seguro("\nDigite '0' para voltar ao menu principal: ")
+            return
+
+        lista_ordenada = ordenar()
+        # Se o usuário cancelar a ordenação digitando 0, a função listar() também é cancelada.
+        if lista_ordenada is None:
+            return
+        # Como o ordenar() apaga o título da listagem, coloca ele de novo para a tabela final.
+        d.limpa()
+        print("===== Listagem de livros =====\n")
+
         while True:
-            # Se a biblioteca não possuir nenhum livro cadastrado, a listagem não ocorre e retorna ao menu.
-            if len(lista_de_livros) == 0:
-                print("\nNenhum livro foi cadastrado ainda. Tente novamente mais tarde.")
-                input_seguro("\nDigite '0' para voltar ao menu principal: ")
-
-            # Se o usuário cancelar a ordenação digitando 0, a função listar() também é cancelada.
-            elif lista_ordenada is None:
-                return
-
             # Se a lista ordenada estiver vazia, significa que não existem livros com o status selecionado.
-            elif len(lista_ordenada) == 0:
+            if len(lista_ordenada) == 0:
                 print("\nNão há livros com o status escolhido na biblioteca. Tente novamente.")
                 input_seguro("\nDigite '0' para voltar ao menu principal: ")
 
@@ -309,8 +313,11 @@ def ordenar():
             elif opcao_ordem == "5":
                 return listar_por_status("emprestado")
 
+            elif opcao_ordem == "":
+                input_seguro("\nA opção não pode ficar em branco. Digite 'Enter' para tentar novamente: ")
+
             else:
-                print("\nOpção inválida. Tente novamente.")
+                input_seguro("\nOpção inválida. Digite 'Enter' para tentar novamente: ")
 
     except Exception: 
         d.limpa()
@@ -329,7 +336,7 @@ def buscar():
             # O .strip() tira os espaços das bordas e o .lower() deixa tudo em minúsculo para facilitar a busca.
             titulo_busca = input_seguro("\nDigite o título do livro que deseja buscar: ").strip().lower()
             if titulo_busca == "":
-                print("\nO título não pode ficar em branco. Tente novamente.")
+                input_seguro("\nO título não pode ficar em branco. Pressione 'Enter' para tentar novamente: ")
                 continue
             # Cria uma lista temporária para guardar todos os livros que forem selecionados na busca.
             livros_encontrados = []
@@ -362,43 +369,46 @@ def buscar():
         print("\nBusca cancelada. Voltando ao menu principal...")
 
 # MENU PRINCIPAL DO PROGRAMA ---------------------------------------------------------------------------------------------------------
+def menu():
+    while True: # Mantém o menu rodando continuamente até o usuário escolher a opção 7 para sair.
+        print("⁓" * 40)
+        print(" Sistema de Gerenciamento de Biblioteca")
+        print("⁓" * 40)
+        print("● 1. Cadastrar livro")
+        print("● 2. Registrar empréstimo")
+        print("● 3. Registrar devolução")
+        print("● 4. Ordenar e listar livros")
+        print("● 5. Buscar livro")
+        print("● 6. Excluir cadastro")
+        print("● 7. Sair do programa")
+        opcao = input("\nEscolha uma opção: ")
 
-while True: # Mantém o menu rodando continuamente até o usuário escolher a opção 7 para sair.
-    print("⁓" * 40)
-    print(" Sistema de Gerenciamento de Biblioteca")
-    print("⁓" * 40)
-    print("● 1. Cadastrar livro")
-    print("● 2. Registrar empréstimo")
-    print("● 3. Registrar devolução")
-    print("● 4. Ordenar e listar livros")
-    print("● 5. Buscar livro")
-    print("● 6. Excluir cadastro")
-    print("● 7. Sair do programa")
-    opcao = input("\nEscolha uma opção: ")
+        # Cada função é chamada de acordo com a opção escolhida pelo usuário, e ele pode voltar ao 
+        # menu quando quiser, digitando 0 em qualquer pergunta.
+        if opcao == "1":
+            cadastrar()
 
-    # Cada função é chamada de acordo com a opção escolhida pelo usuário, e ele pode voltar ao 
-    # menu quando quiser, digitando 0 em qualquer pergunta.
-    if opcao == "1":
-        cadastrar()
+        elif opcao == "2":
+            emprestimo()
 
-    elif opcao == "2":
-        emprestimo()
+        elif opcao == "3":
+            devolucao()
 
-    elif opcao == "3":
-        devolucao()
+        elif opcao == "4":
+            listar()
 
-    elif opcao == "4":
-        listar()
+        elif opcao == "5":
+            buscar()
 
-    elif opcao == "5":
-        buscar()
+        elif opcao =="6":
+            excluir_cadastro()
 
-    elif opcao =="6":
-        excluir_cadastro()
+        elif opcao == "7":
+            print("\nEncerrando o programa... Até logo!\n")
+            break
 
-    elif opcao == "7":
-        print("\nEncerrando o programa... Até logo!")
-        break
+        else:
+            print("\nOpção inválida, tente novamente.")
 
-    else:
-        print("\nOpção inválida, tente novamente.")
+#Chamo a função menu para iniciar
+menu()
