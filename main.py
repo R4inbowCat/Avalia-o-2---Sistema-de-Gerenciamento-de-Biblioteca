@@ -49,7 +49,7 @@ def input_seguro(mensagem):
 def criar_tabela(lista_para_exibir):
     # Exibe o cabeçalho da tabela com os títulos das colunas, e uma linha de separação.
     print(f"{'TÍTULO':<25} | {'AUTOR(A)':<20} | ANO   | ISBN            | STATUS")
-    print("-" * 93)
+    print("-" * 90)
 
     # O for vai percorrer a lista de livros e exibir cada livro em uma linha da tabela.
     for livro in lista_para_exibir:
@@ -68,7 +68,7 @@ def criar_tabela(lista_para_exibir):
         # Exibe os livros da biblioteca usando a mesma formatação do cabeçalho (os :<25 ou 
         # :<20 servem para garantir que o espaço onde o texto está fique do tamanho certo).
         print(f"{titulo:<25} | {autor:<20} | {livro['publicacao']:<5} | {livro['isbn']:<15} | {livro['status']}")
-    print("-" * 93)
+    print("-" * 90)
 
 def cadastrar():
     # A lista de livros é carregada quando o programa é iniciado.
@@ -274,6 +274,9 @@ def listar_por_titulo(livro):
 def listar_por_ano(livro):
     return int(livro["publicacao"]) # O int converte em número para ordenar corretamente os anos de publicação.
 
+def listar_por_autor(livro):
+    return livro["autor"]
+
 def listar_por_status(status_desejado):
     lista_de_livros = ler_arquivo_csv()
     lista_ordenada = []
@@ -297,8 +300,9 @@ def ordenar():
             print("● 1 - Todos os livros (ordem de cadastro)")
             print("● 2 - Ordem alfabética (por título)")
             print("● 3 - Ordem de ano de publicação")
-            print("● 4 - Apenas livros disponíveis")
-            print("● 5 - Apenas livros emprestados")
+            print("● 4 - Ordem por autor(a)")
+            print("● 5 - Apenas livros disponíveis")
+            print("● 6 - Apenas livros emprestados")
             opcao_ordem = input_seguro("\nEscolha a opção desejada: ")
 
             # Ordenação padrão: apenas retorna a lista inteira de livros sem mexer em nada.
@@ -313,11 +317,15 @@ def ordenar():
             elif opcao_ordem == "3":
                 return sorted(lista_de_livros, key=listar_por_ano) 
 
-            # Ordenação por status (disponível ou emprestado): cria uma nova lista apenas com os livros que têm o status desejado.
+            # Ordenação por autoria: utiliza a função listar_por_autor() como chave de organização.
             elif opcao_ordem == "4":
+                return sorted(lista_de_livros, key=listar_por_autor)
+
+            # Ordenação por status (disponível ou emprestado): cria uma nova lista apenas com os livros que têm o status desejado.
+            elif opcao_ordem == "5":
                 return listar_por_status("disponivel")
 
-            elif opcao_ordem == "5":
+            elif opcao_ordem == "6":
                 return listar_por_status("emprestado")
 
             elif opcao_ordem == "":
